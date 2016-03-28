@@ -56,9 +56,8 @@ class GatlingPlugin implements Plugin<Project> {
 
         project.sourceSets {
             gatling {
-                scala.srcDirs gatlingExtension.simulationsDir()
-                resources.srcDirs gatlingExtension.dataDir()
-                resources.srcDirs gatlingExtension.bodiesDir()
+                scala.srcDirs = [gatlingExtension.simulationsDir()]
+                resources.srcDirs = [gatlingExtension.dataDir(), gatlingExtension.bodiesDir()]
             }
         }
 
