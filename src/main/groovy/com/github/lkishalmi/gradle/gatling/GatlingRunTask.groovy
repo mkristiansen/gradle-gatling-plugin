@@ -1,13 +1,16 @@
 package com.github.lkishalmi.gradle.gatling
 
 import org.gradle.api.tasks.JavaExec
+import org.gradle.process.ExecResult
+import java.util.regex.Pattern
 
 class GatlingRunTask extends JavaExec {
 
     private final String GATLING_MAIN_CLASS = 'io.gatling.app.Gatling'
 
     def simulations
-
+    def failedSimulations = []
+    ExecResult execResult = null
     List<String> jvmArgs
 
     public GatlingRunTask() {
@@ -38,12 +41,14 @@ class GatlingRunTask extends JavaExec {
             throw new IllegalArgumentException("`simulations` property neither Closure nor Iterable<String>")
         }
 
-        actualSimulations.each { def simu ->
-            project.javaexec {
+        actualSimulations.each { simu ->
+            execResult = project.javaexec {
                 main = self.getMain()
                 classpath = self.getClasspath()
 
                 jvmArgs = self.getJvmArgs()
+
+                ignoreExitValue = Boolean.valueOf(System.getProperty('gatling.continueOnFailure', project.gatling.continueOnFailure as String))
 
                 args self.getArgs()
                 args "-s", simu
@@ -51,6 +56,16 @@ class GatlingRunTask extends JavaExec {
                 systemProperties = self.getSystemProperties()
                 standardInput = self.getStandardInput()
             }
+            if (execResult.exitValue != 0) {
+                println ">>\n>>\n>>\n>> FAILURE ---- Simulation ${simu} has FAILED ---- \n>>\n>>\n>>\n>>"
+                failedSimulations.add(simu)
+
+            } else {
+                println ">>\n>>\n>>\n>> SUCCESS ---- Simulation ${simu} has PASSED ---- \n>>\n>>\n>>\n>>"
+            }
+        }
+        if (failedSimulations.size() > 0) {
+            throw new GroovyRuntimeException("THE FOLLOWING TESTS HAVE FAILED: ${failedSimulations}".toString())
         }
     }
 }

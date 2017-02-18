@@ -26,6 +26,8 @@ class GatlingPluginExtension {
         '-Djava.net.preferIPv6Addresses=false'
     ]
 
+    def continueOnFailure = false
+
     def simulations = {
         include "**/*Simulation.scala"
     }
